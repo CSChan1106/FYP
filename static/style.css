@@ -1,0 +1,436 @@
+/* Global Styles */
+body {
+    background: #f4f7f9;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    margin: 20px;
+    color: #333;
+}
+
+h2, h3 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+p {
+    line-height: 1.6;
+}
+
+.section {
+    background: #fff;
+    border: 1px solid #e1e8ee;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    display: block;  /* Ensures labels take full width */
+    width: 100%;  /* Make labels full width */
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="file"],
+input[type="number"],
+select {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="file"]:focus,
+input[type="number"]:focus,
+select:focus {
+    border-color: #3498db;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1rem;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+.plot-container {
+    width: 100%;
+    height: auto;
+    margin: 10px 0;
+}
+
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    z-index: 2000;
+    display: none;
+}
+
+.loader {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3498db;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Chat Styles */
+#chat-container {
+    display: none; /* Hidden by default */
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    height: 700px;
+    position: fixed; /* Fixed position */
+    bottom: 80px; /* Position above the chat icon */
+    right: 20px; /* Position from the right */
+    z-index: 1000; /* Ensure it's above other content */
+    transition: all 0.3s ease; /* Smooth transition for appearing */
+}
+
+#messages {
+    height: 520px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    background: #f9f9f9; /* Light background for messages */
+}
+
+.user-message {
+    text-align: left;
+    background: #e1f5fe; /* Light blue for user messages */
+    padding: 8px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+.ai-message {
+    text-align: left;
+    background: #ffe0b2; /* Light orange for AI messages */
+    padding: 8px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+}
+
+#user-input {
+    width: calc(100% - 22px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#send-button {
+    padding: 10px 15px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#send-button:hover {
+    background-color: #218838;
+}
+
+/* Chat icon styles */
+#chat-icon {
+    width: 60px;
+    height: 60px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 20px; /* Position from the bottom */
+    right: 20px; /* Position from the right */
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    z-index: 1000; /* Ensure it's above other content */
+    transition: background-color 0.3s;
+}
+
+#chat-icon:hover {
+    background-color: #0056b3;
+}
+
+.logout-section {
+    margin-top: 20px; /* Add some space above the logout button */
+}
+
+.logout-section button {
+    background-color: red; /* Red color for logout button */
+    color: white; /* White text */
+    padding: 10px 20px; /* Padding */
+    border: none; /* No border */
+    border-radius: 5px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+.logout-section button:hover {
+    background-color: darkred; /* Darker red on hover */
+}
+
+.container {
+    display: flex;
+    height: 100vh; /* Ensures the container takes full height */
+}
+
+
+
+.main-content {
+    flex: 1; /* Takes up the remaining space */
+    padding: 20px;
+    overflow-y: auto; /* Allows scrolling if content overflows */
+}
+
+/* Reset body margins so that our fixed sidebar fits perfectly */
+body {
+    background-image: url(./img/pic1.jpg);
+    background-size: auto;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;               /* Removed default margin */
+    padding: 20px;           /* Use padding if needed */
+    color: #333;
+}
+
+/* Other global styles remain unchanged ... */
+
+/* Container: make sure main content leaves space for the fixed sidebar */
+.container {
+    display: flex;
+    /* Remove height: 100vh to avoid conflicts with fixed elements */
+}
+
+/* Fixed Sidebar Styles */
+.sidebar {
+    background: #417bb4;             /* Dark background for contrast */
+    width: 220px;                    /* Fixed width for sidebar */
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    height: calc(100vh - 80px);       /* Full viewport height minus the body padding (20px top + 20px bottom) */
+    color: #ecf0f1;                  /* Light text color for readability */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;  /* Pushes logout button to the bottom */
+    position: fixed;                 /* Fix sidebar so it never scrolls */
+    top: 20px;                       /* Align with body padding */
+    left: 20px;
+    border-radius: 30px;     
+                     /* Align with body padding */
+}
+
+
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    margin: 15px 0;
+}
+
+.sidebar ul li a {
+    color: #ecf0f1;
+    text-decoration: none;
+    font-weight: 600;
+    display: block;
+    padding: 10px;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.sidebar ul li a:hover,
+.sidebar ul li a:focus {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Logout Section remains at the bottom */
+.logout-section {
+    text-align: center;
+}
+
+.logout-section button {
+    background-color: #e74c3c;
+    border: none;
+    color: #ecf0f1;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.logout-section button:hover {
+    background-color: #c0392b;
+}
+
+/* Adjust main content so it doesn’t get hidden behind the fixed sidebar */
+.main-content {
+    margin-left: 260px; /* Sidebar width (220px) + left padding (20px) + extra gap (20px) */
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.sidebar > h2 {
+    font-size: 1.8rem;
+    margin: 0 0 10px;  /* Adjust as needed for spacing */
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.user-profile-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  
+  .profile-picture {
+    flex-shrink: 0;
+    /* Optionally adjust width */
+    width: 200px;
+  }
+  
+  .profile-picture img {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+  
+  .profile-details {
+    flex-grow: 1;
+  }
+  
+  .profile-details > div {
+    margin-bottom: 15px;
+  }
+  
+  /* Adjust the update button styling if needed */
+  .profile-details button {
+    margin-top: 10px;
+  }
+
+  button {
+    color: white;
+    padding: 12px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  button svg {
+    margin-right: 8px;
+    height: 20px;
+    width: 20px;
+}
+
+
+
+  .sidebar-logo {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    position: relative;
+    transition: color 0.3s, transform 0.3s;
+}
+
+.sidebar-logo::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 5px;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+}
+
+.sidebar-logo:hover {
+    color: #FFD700;
+    transform: scale(1.1);
+    transition: color 0.3s, transform 0.3s;
+}

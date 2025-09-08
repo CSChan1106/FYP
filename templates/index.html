@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>MindWave</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome-5.5/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='slick/slick.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='slick/slick-theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='magnific-popup/magnific-popup.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tooplate-infinite-loop.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login-style.css') }}">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script>
+      async function register() {
+          // Registration logic to send data to the backend
+          const email = document.getElementById("email").value;
+          const username = document.getElementById("reg_user").value;
+          const password = document.getElementById("reg_pass").value;
+          const agreeCheckbox = document.getElementById('agree');
+
+          if (!agreeCheckbox.checked) {
+        alert('Please agree to the terms & conditions to register.');
+        return;
+        }   
+
+          // Add your registration endpoint logic here
+          console.log("Registering:", { email, username, password });
+
+          toggleForms();
+
+          // Example fetch request (adjust the URL as needed)
+          const response = await fetch('/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email, username, password }),
+          });
+
+          const result = await response.json();
+          alert(result.message || "Registration failed.");
+      }
+
+      async function login() {
+        const email = document.getElementById("user").value; // Ensure this is the correct ID
+        const password = document.getElementById("pass").value;
+
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: password }), // Make sure this matches the expected structure
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            window.location.href = result.redirect;  // Redirect to testAPI.html
+        } else {
+            const result = await response.json();
+            alert(result.error || "Login failed.");
+        }
+      }
+  </script>
+</head>
+
+<body>
+  <!-- Hero section -->
+  <section id="infinite" class="text-white tm-font-big tm-parallax">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-md tm-navbar" id="tmNav">
+      <div class="container">
+        <div class="tm-next">
+          <a href="#infinite" class="navbar-brand">MindWave</a>
+        </div>
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <i class="fas fa-bars navbar-toggler-icon"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link tm-nav-link" href="#infinite">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link tm-nav-link" href="#whatwedo">Resources</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link tm-nav-link" href="#testimonials">About  us</a>
+            </li>
+            
+
+            <li class="nav-item">
+              <a class="nav-link tm-nav-link" href="#gallery">Login</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link tm-nav-link" href="#contact">Contact  us</a>
+            </li>
+
+            
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="text-center tm-hero-text-container">
+      <div class="tm-hero-text-container-inner">
+        <h2 class="tm-hero-title">MindWave</h2>
+        <p class="tm-hero-subtitle">
+          Online resources for testing your Brain Health
+          <br>By using the EEG Headset
+        </p>
+      </div>
+    </div>
+
+
+    <div class="tm-next tm-intro-next">
+      <a href="#whatwedo" class="text-center tm-down-arrow-link">
+        <i class="fas fa-2x fa-arrow-down tm-down-arrow"></i>
+      </a>
+    </div>
+  </section>
+
+
+
+
+
+  <!-- What we do -->
+  <section id="whatwedo" class="tm-section-pad-top">
+    <div class="container">
+      <div class="row tm-content-box">
+        <!-- first row -->
+        <div class="col-lg-12 col-xl-12">
+          <div class="tm-intro-text-container">
+            <h2 class="tm-text-primary mb-4 tm-section-title">What is Brain Health ?</h2>
+            <br class="mb-4 tm-intro-text">
+            Brain health refers to the overall functioning and well-being of the brain, encompassing cognitive, emotional, and physical aspects.
+             It is crucial for daily activities, decision-making, learning, and emotional regulation. Here are some key components:<br> </br>
+
+<h5 class="tm-text-primary mb-4 ">Anxiety Disorder:</h5>
+Anxiety disorders are characterized by excessive fear or worry that can interfere with daily activities. 
+Symptoms may include restlessness, fatigue, difficulty concentrating, and physical symptoms such as increased heart rate.<br> </br>
+
+<h5 class="tm-text-primary mb-4 ">Dementia:</h5>
+Dementia is an umbrella term for a range of cognitive impairments that affect memory, thinking,
+ and social abilities. Alzheimer's disease is the most common form of dementia, 
+ leading to progressive memory loss and cognitive decline.<br> </br>
+
+<h5 class="tm-text-primary mb-4 ">Parkinson's Disease :</h5>
+Parkinson's disease is a progressive neurological disorder that affects movement. 
+Symptoms include tremors, stiffness, slowness of movement, and balance problems. 
+Early diagnosis and treatment can help manage symptoms effectively.
+
+              <a href="#">PRAROZ FACEBOOK PAGE</a>.
+
+              <h2 class="tm-text-primary mb-4 tm-section-title">How to measure the Brain Health ?</h2>
+
+              <h5 class="tm-text-primary mb-4 ">EEG (Electroencephalography):</h5>
+                EEG is a non-invasive technique used to record electrical activity in the brain. 
+                It involves placing small electrodes on the scalp to measure voltage fluctuations resulting from neuronal activity. 
+                EEG is widely used in diagnosing conditions such as epilepsy, sleep disorders, and other neurological conditions.<br> </br>
+              <h5 class="tm-text-primary mb-4 ">EEG Headsets:</h5>
+              EEG headsets are portable devices that allow users to monitor their brain activity in real-time.
+               These headsets are equipped with electrodes that capture brain signals and transmit them to a connected device
+                (like a smartphone or computer) for analysis. 
+              EEG headsets are increasingly popular for personal wellness, meditation, and cognitive training.<br> </br>
+
+
+              <h2 class="tm-text-primary mb-4 tm-section-title">How to use an EEG Headset</h2>
+
+              <h3 class="tm-text-primary mb-4 ">Step 1: Preparation</h3>
+              Ensure that your hair is clean and dry. If necessary, brush your hair to remove any tangles.<br> </br>
+
+              <h3 class="tm-text-primary mb-4 ">Step 2: Setup</h3>
+              Follow the manufacturer's instructions to set up the EEG headset. 
+              This usually involves charging the device and connecting it to your smartphone or computer via Bluetooth.<br> </br>
+
+              <h3 class="tm-text-primary mb-4 ">Step 3: Placement</h3>
+              Carefully place the headset on your head, 
+              ensuring that the electrodes make good contact with your scalp. 
+              Adjust the fit for comfort.<br> </br>
+
+              <h3 class="tm-text-primary mb-4 ">Step 4: Calibration </h3>
+              Some headsets may require calibration before use. 
+              Follow the prompts on the connected device to calibrate the headset.<br> </br>
+
+              <h3 class="tm-text-primary mb-4 ">Step 5: Start Monitoring </h3>
+               Open the associated app on your device and start a session. 
+               You can monitor your brain activity in real-time and view various 
+               metrics such as attention levels, relaxation, and meditation states.<br> </br>
+
+              <h3 class="tm-text-primary mb-4 ">Step 6: Analysis </h3>
+               After your session, review the recorded data to gain insights into your brain activity. 
+               Our online services will provide feedback and suggestions for improving for you.<br> </br>
+
+              <h3 class="tm-text-primary mb-4 ">Step 7: Regular Use</h3>
+              For best results, use the EEG headset regularly to track changes in your brain activity over time 
+              and adjust your mental wellness practices accordingly.<br> </br>
+              
+
+
+              
+            </p>
+          </div>
+        </div>
+      </div>
+      <!--first row-->
+      
+      <!-- third row -->
+    </div>
+  </section>
+
+
+
+  <section id="testimonials" class="tm-section-pad-top tm-parallax-2">
+    <div class="container tm-testimonials-content">
+      <div class="row">
+        <div class="col-lg-12 tm-content-box">
+          <h1 class="text-white text-center mb-4 tm-section-title">About  us</h1>
+          <h5 class="text-white text-center mb-4 ">What we do ?</h5>
+          <p class="mx-auto tm-section-desc text-center">
+
+            Our website is dedicated to providing valuable resources and support for individuals 
+            seeking to enhance their brain health and well-being.<br>
+            
+            Remember, your brain health matters. Take the first step towards a healthier mind today!<br>
+
+
+
+
+
+
+          </p>
+          <div class="mx-auto tm-gallery-container tm-gallery-container-2">
+            <div class="tm-testimonials-carousel">
+              <figure class="tm-testimonial-item">
+                <img src="{{ url_for('static', filename='img/Portrait_Placeholder.png') }}" alt="Image" class="img-fluid mx-auto">
+  
+                <figcaption style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">Chan Chak Shing</br>(Backend developer)</figcaption>
+            </figure>
+            <figure class="tm-testimonial-item">
+                <img src="{{ url_for('static', filename='img/Portrait_Placeholder.png') }}" alt="Image" class="img-fluid mx-auto">
+
+                <figcaption style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">Chow Hong Nin</br>(Backend developer)</figcaption>
+            </figure>
+            <figure class="tm-testimonial-item">
+                <img src="{{ url_for('static', filename='img/Portrait_Placeholder.png') }}" alt="Image" class="img-fluid mx-auto">
+
+                <figcaption style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">Chu Cheuk Sang</br>(Frontend developer)</figcaption>
+            </figure>
+            <figure class="tm-testimonial-item">
+                <img src="{{ url_for('static', filename='img/Portrait_Placeholder.png') }}" alt="Image" class="img-fluid mx-auto">
+
+                <figcaption style="text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">Chan Kwun On</br>(Frontend developer)</figcaption>
+            </figure>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tm-bg-overlay"></div>
+  </section>
+
+<section id="whatwedo" class="tm-section-pad-top">
+  <div class="container">
+    <div class="row tm-content-box">
+      <!-- first row -->
+      <div class="col-lg-12 col-xl-12">
+        <div class="tm-intro-text-container">
+          <br class="mb-4 tm-intro-text">
+            <h2 class="tm-text-primary mb-4 tm-section-title">FAQ About Brain Diseases</h2>
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--first row-->
+    <div class="row tm-content-box">
+      <!-- second row -->
+      <div class="col-lg-1">
+        <i class="far fa-3x fa-chart-bar text-center tm-icon"></i>
+      </div>
+      <div class="col-lg-5">
+        <div class="tm-intro-text-container">
+          <h2 class="tm-text-primary mb-4">What is a brain disease?</h2>
+          <p class="mb-4 tm-intro-text">
+            A brain disease refers to any condition that affects the structure or function of the brain. 
+            This can include neurological disorders, mental health conditions, and cognitive impairments.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-lg-1">
+        <i class="far fa-3x fa-comment-alt text-center tm-icon"></i>
+      </div>
+      <div class="col-lg-5">
+        <div class="tm-intro-text-container">
+          <h2 class="tm-text-primary mb-4">How are brain diseases diagnosed?</h2>
+          <p class="mb-4 tm-intro-text">
+            Diagnosis typically involves a combination of medical history, 
+            physical examinations, neurological assessments, 
+            and imaging tests such as MRI or CT scans.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-lg-1">
+        <i class="fas fa-3x fa-fingerprint text-center tm-icon"></i>
+      </div>
+      <div class="col-lg-5">
+        <div class="tm-intro-text-container">
+          <h2 class="tm-text-primary mb-4">Can brain diseases be treated?</h2>
+          <p class="mb-4 tm-intro-text">
+            While some brain diseases can be managed with medication, 
+            therapy, or lifestyle changes, others may have no cure. 
+            Early diagnosis and intervention can improve outcomes.
+          </p>
+          <div class="tm-continue">
+            <a href="#testimonials" class="tm-intro-text tm-btn-primary">Learn More</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-1">
+        <i class="fas fa-3x fa-users text-center tm-icon"></i>
+      </div>
+      <div class="col-lg-5">
+        <div class="tm-intro-text-container">
+          <h2 class="tm-text-primary mb-4">What lifestyle changes can help maintain brain health?</h2>
+          <p class="mb-4 tm-intro-text">
+            Maintaining a healthy diet, engaging in regular physical activity, 
+            getting enough sleep, managing stress, and staying socially active 
+            can all contribute to better brain health.
+          </p>
+          <div class="tm-continue">
+            <a href="#testimonials" class="tm-intro-text tm-btn-primary">Details</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- third row -->
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+<section id="gallery" class="tm-section-pad-top">
+  <div class="container tm-container-gallery">
+      <div class="row">
+          <div class="wrapper">
+              <div class="login_box">
+                  <div class="login-header">
+                      <span>Login</span>
+                  </div>
+                  
+                  
+
+                  <div class="input_box">
+                      <input type="text" id="user" placeholder="Email" class="tm-input" required>
+                      <label for="user" class="label"></label>
+                      <i class="bx bx-user icon"></i>
+                  </div>
+                  <div class="input_box">
+                      <input type="password" id="pass" placeholder="Password" class="tm-input" required>
+                      <label for="pass" class="label"></label>
+                      <i class="bx bx-lock-alt icon"></i>
+                  </div>
+                  <div class="remember-forgot">
+                      <div class="remember-me">
+                          <input type="checkbox" id="remember">
+                          <label for="remember">Remember me</label>
+                      </div>
+                      <div class="forgot">
+                          <a href="#">Forgot password?</a>
+                      </div>
+                  </div>
+                  <div class="input_box">
+                      <input type="button" class="input-submit" value="Login" onclick="login()">
+                  </div>
+                  <div class="register">
+                      <span>Don't have an account? <a href="#gallery" class="register-link" onclick="toggleForms()">Register</a></span>
+                  </div>
+              </div>
+
+              <div class="Registration_box" style="display:none">
+                  <div class="Registration-header">
+                      <span>Registration</span>
+                  </div>
+                  <div class="input_box">
+                      <input type="text" id="email" placeholder="Email" class="tm-input" required>
+                      <label for="email" class="label"></label>
+                      <i class="bx bx-envelope icon"></i>
+                  </div>
+                  <div class="input_box">
+                      <input type="text" id="reg_user" placeholder="Name" class="tm-input" required>
+                      <label for="reg_user" class="label"></label>
+                      <i class="bx bx-user icon"></i>
+                  </div>
+                  <div class="input_box">
+                      <input type="password" id="reg_pass" placeholder="Password" class="tm-input" required>
+                      <label for="reg_pass" class="label"></label>
+                      <i class="bx bx-lock-alt icon"></i>
+                  </div>
+                  <div class="remember-forgot">
+                      <div class="remember-me">
+                          <input type="checkbox" id="agree" required>
+                          <label for="agree">I agree to the terms & conditions</label>
+                      </div>
+                  </div>
+                  <div class="input_box">
+                      <input type="button" class="input-submit" value="Register" onclick="register()">
+                  </div>
+                  <div class="register">
+                      <span>Already have an account? <a href="#gallery" class="login-link" onclick="toggleForms()">Login</a></span>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/login-script.js') }}"></script>
+  <script type="module" src="http://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="http://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+
+  <script>
+      function toggleForms() {
+          const loginBox = document.querySelector('.login_box');
+          const registrationBox = document.querySelector('.Registration_box');
+          if (loginBox.style.display === "none") {
+              loginBox.style.display = "block";
+              registrationBox.style.display = "none";
+          } else {
+              loginBox.style.display = "none";
+              registrationBox.style.display = "block";
+          }
+      }
+  </script>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <!-- Contact Section -->
+
+  <section id="contact" class="tm-section-pad-top tm-parallax-2">
+    <div class="container tm-container-contact">
+      <div class="row">
+        <div class="text-center col-12">
+          <h2 class="tm-section-title mb-4">Contact us</h2>
+          <p class="mb-5">
+            We value your input ! Please let us know how we can improve our services or if there are specific topics you would like us to cover.
+            Subscribe to our newsletter to receive the latest updates, article, and resources directly to your inbox.
+          </p><br>
+        </div>
+
+        <div class="col-sm-12 col-md-6">
+          <form action="" method="get">
+            <input type="text" id="name" name="name" placeholder="Your Name" class="tm-input" required />
+            <input type="email" name="email" id="email" placeholder="Your Email" class="tm-input" required />
+            <textarea name="message" id="message" rows="8" placeholder="Message" class="tm-input" required></textarea>
+            <button type="submit" class="btn tm-btn-submit">Submit</button>
+          </form>
+        </div>
+        <div class="col-sm-12 col-md-6">
+          <div class="contact-item">
+            <a href="#" class="item-link">
+              <i class="far fa-2x fa-comment mr-4"></i>
+              <span class="mb-0">Chat Online</span>
+            </a>
+          </div>
+          <div class="contact-item">
+            <a href="#" class="item-link">
+              <i class="far fa-2x fa-envelope mr-4"></i>
+              <span class="mb-0">example@company.com</span>
+            </a>
+          </div>
+          <div class="contact-item">
+            <a href="#" class="item-link">
+              <i class="fas fa-2x fa-map-marker-alt mr-4"></i>
+              <span class="mb-0">Our Location</span>
+            </a>
+          </div>
+          <div class="contact-item">
+            <a href="#" class="item-link">
+              <i class="fas fa-2x fa-phone-square mr-4"></i>
+              <span class="mb-0">122 233 45555</span>
+            </a>
+          </div>
+          <div class="contact-item"></div>
+
+        </div>
+      </div>
+      <!-- row ending  -->
+    </div>
+
+    <footer class="text-center small tm-footer">
+      <p class="mb-0">
+         &copy; 2025 Brain Mental Health.
+        <a href="#">All rights reserved</a>
+      </p>
+    </footer>
+  </section>
+
+
+
+  
+
+
+
+
+
+
+
+  <script src="{{ url_for('static', filename='js/jquery-1.9.1.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/easing.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.singlePageNav.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='slick/slick.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='magnific-popup/jquery.magnific-popup.min.js') }}"></script>
+  <script>
+
+    function getOffSet() {
+      var _offset = 450;
+      var windowHeight = window.innerHeight;
+
+      if (windowHeight > 500) {
+        _offset = 400;
+      }
+      if (windowHeight > 680) {
+        _offset = 300
+      }
+      if (windowHeight > 830) {
+        _offset = 210;
+      }
+
+      return _offset;
+    }
+
+    function setParallaxPosition($doc, multiplier, $object) {
+      var offset = getOffSet();
+      var from_top = $doc.scrollTop(),
+        bg_css = 'center ' + (multiplier * from_top - offset) + 'px';
+      $object.css({ "background-position": bg_css });
+    }
+
+    // Parallax function
+    // Adapted based on https://codepen.io/roborich/pen/wpAsm        
+    var background_image_parallax = function ($object, multiplier, forceSet) {
+      multiplier = typeof multiplier !== 'undefined' ? multiplier : 0.5;
+      multiplier = 1 - multiplier;
+      var $doc = $(document);
+      // $object.css({"background-attatchment" : "fixed"});
+
+      if (forceSet) {
+        setParallaxPosition($doc, multiplier, $object);
+      } else {
+        $(window).scroll(function () {
+          setParallaxPosition($doc, multiplier, $object);
+        });
+      }
+    };
+
+    var background_image_parallax_2 = function ($object, multiplier) {
+      multiplier = typeof multiplier !== 'undefined' ? multiplier : 0.5;
+      multiplier = 1 - multiplier;
+      var $doc = $(document);
+      $object.css({ "background-attachment": "fixed" });
+
+      $(window).scroll(function () {
+        if ($(window).width() > 768) {
+          var firstTop = $object.offset().top,
+            pos = $(window).scrollTop(),
+            yPos = Math.round((multiplier * (firstTop - pos)) - 186);
+
+          var bg_css = 'center ' + yPos + 'px';
+
+          $object.css({ "background-position": bg_css });
+        } else {
+          $object.css({ "background-position": "center" });
+        }
+      });
+    };
+
+    $(function () {
+      // Hero Section - Background Parallax
+      background_image_parallax($(".tm-parallax"), 0.30, false);
+      background_image_parallax_2($("#contact"), 0.80);
+      background_image_parallax_2($("#testimonials"), 0.80);
+
+      // Handle window resize
+      window.addEventListener('resize', function () {
+        background_image_parallax($(".tm-parallax"), 0.30, true);
+      }, true);
+
+      // Detect window scroll and update navbar
+      $(window).scroll(function (e) {
+        if ($(document).scrollTop() > 120) {
+          $('.tm-navbar').addClass("scroll");
+        } else {
+          $('.tm-navbar').removeClass("scroll");
+        }
+      });
+
+      // Close mobile menu after click 
+      $('#tmNav a').on('click', function () {
+        $('.navbar-collapse').removeClass('show');
+      })
+
+      // Scroll to corresponding section with animation
+      $('#tmNav').singlePageNav({
+        'easing': 'easeInOutExpo',
+        'speed': 600
+      });
+
+      // Add smooth scrolling to all links
+      // https://www.w3schools.com/howto/howto_css_smooth_scroll.asp
+      $("a").on('click', function (event) {
+        if (this.hash !== "") {
+          event.preventDefault();
+          var hash = this.hash;
+
+          $('html, body').animate({
+            scrollTop: $(hash).offset().top
+          }, 600, 'easeInOutExpo', function () {
+            window.location.hash = hash;
+          });
+        } // End if
+      });
+
+      // Pop up
+      $('.tm-gallery').magnificPopup({
+        delegate: 'a',
+        type: 'image',
+        gallery: { enabled: true }
+      });
+
+      $('.tm-testimonials-carousel').slick({
+        dots: true,
+        prevArrow: false,
+        nextArrow: false,
+        infinite: false,
+        slidesToShow: 3,
+        slidesToScroll: 1,
+        responsive: [
+          {
+            breakpoint: 992,
+            settings: {
+              slidesToShow: 2
+            }
+          },
+          {
+            breakpoint: 768,
+            settings: {
+              slidesToShow: 2
+            }
+          },
+          {
+            breakpoint: 480,
+            settings: {
+              slidesToShow: 1
+            }
+          }
+        ]
+      });
+
+      // Gallery
+      $('.tm-gallery').slick({
+        dots: true,
+        infinite: false,
+        slidesToShow: 5,
+        slidesToScroll: 2,
+        responsive: [
+          {
+            breakpoint: 1199,
+            settings: {
+              slidesToShow: 4,
+              slidesToScroll: 2
+            }
+          },
+          {
+            breakpoint: 991,
+            settings: {
+              slidesToShow: 3,
+              slidesToScroll: 2
+            }
+          },
+          {
+            breakpoint: 767,
+            settings: {
+              slidesToShow: 2,
+              slidesToScroll: 1
+            }
+          },
+          {
+            breakpoint: 480,
+            settings: {
+              slidesToShow: 1,
+              slidesToScroll: 1
+            }
+          }
+        ]
+      });
+    });
+  </script>
+</body>
+
+</html>

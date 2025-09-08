@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindWave</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  {% if is_logged_in %}
+  <script>
+    const currentUserId = "{{ current_user.id }}";
+  </script>
+  {% endif %}
+  
+  <script>
+    
+  async function generateLatestSummary() {
+      showLoading();
+      try {
+          // Call the endpoint to generate summary using latest records (no need to pass record_ids)
+          const response = await fetch(`${API_URL}/generate_summary`, {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({})  // No record_ids provided means endpoint picks latest records
+          });
+          const result = await response.json();
+          if(result.summary){
+              displaySummaryText(result.summary);
+              loadPastSummaries(); // Reload past summaries list
+              toggleConsultButton(result.summary.trim());
+          } else {
+              alert(result.error || "Error generating summary.");
+              toggleConsultButton('');
+          }
+      } catch (error) {
+          console.error(error);
+          toggleConsultButton('');
+      } finally {
+          hideLoading();
+      }
+  }
+
+  function toggleConsultButton(summaryText) {
+    const consultButton = document.getElementById("consult-ai-button");
+    if (summaryText) {
+        consultButton.style.display = 'block'; // Show button if summary text is present
+    } else {
+        consultButton.style.display = 'none'; // Hide button if summary text is empty
+    }
+}
+
+function consultWithAi() {
+    const summaryText = document.getElementById("summary_container").innerText.trim();
+    if (summaryText) {
+        userInput.value = "<!!FIRST>>" + summaryText + "<br> Remember the upper content is my diagnose summary, check my diseases how good or how bad. For Your next reply, you just need say 'Hi, How can I help you'."; // Set the chat input to the summary text
+        chatContainer.style.display = chatContainer.style.display === 'block' ? 'none' : 'block';     
+        sendMessage(); // Send the message to AI
+        messages.innerHTML = '';
+    } else {
+        alert("No summary text available to send.");
+    }
+}
+    const bandColors = {
+      "Alpha": "blue",
+      "Beta": "orange",
+      "Delta": "green",
+      "Gamma": "red",
+      "Theta": "purple"
+    };
+    const API_URL = "http://127.0.0.1:5000"; // Adjust if needed
+
+    function showLoading() {
+      document.getElementById("loading-overlay").style.display = 'block';
+    }
+    function hideLoading() {
+      document.getElementById("loading-overlay").style.display = 'none';
+    }
+
+    function showModal(message) {
+      document.getElementById("modalMessage").innerText = message;
+      document.getElementById("messageModal").style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("messageModal").style.display = "none";
+    }
+    
+      async function logout() {
+      showLoading();
+      try {
+          const response = await fetch(`${API_URL}/logout`, {
+              method: "POST",
+              credentials: "include"
+          });
+          const result = await response.json();
+          if (result.message) {
+              showModal(result.message); 
+              setTimeout(() => {
+                  window.location.href = result.redirect; 
+              }, 1000);
+          }
+      } catch (error) {
+          console.error(error);
+          showModal("An error occurred during logout.");
+      } finally {
+          hideLoading();
+      }
+    }  
+    function markdownToHtml(mdText) {
+      let html = mdText;
+
+      // Convert bold: **text** → <strong>text</strong>
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+      // Convert italic: *text* → <em>text</em>
+      html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+      // Convert bullet lists: lines starting with "- "
+      // First, wrap each bullet line in <li> tags.
+      html = html.replace(/^\s*-\s+(.*)$/gm, '<li>$1</li>');
+      
+      // Then, wrap consecutive <li> items in a <ul> block.
+      html = html.replace(/((?:<li>.*<\/li>\s*)+)/g, '<ul>$1</ul>');
+
+      // Convert numbered lists: lines starting with "1. ", "2. ", etc.
+      html = html.replace(/^\s*\d+\.\s+(.*)$/gm, '<li>$1</li>');
+      html = html.replace(/((?:<li>.*<\/li>\s*)+)/g, '<ol>$1</ol>');
+
+      // Convert newlines to <br> tags if needed (optional)
+      // html = html.replace(/\n/g, '<br>');
+
+      return html;
+  }
+    async function uploadFile() {
+      showLoading();
+      try {
+        const fileInput = document.getElementById("file_upload");
+        const fdtInput = document.getElementById("fdt_upload");
+        if (fileInput.files.length === 0) {
+          alert("Please select a .set file.");
+          return;
+        }
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        if (fdtInput.files.length > 0) {
+          formData.append("fdt_file", fdtInput.files[0]);
+        }
+        const response = await fetch(`${API_URL}/upload`, {
+          method: "POST",
+          body: formData,
+          credentials: "include"
+        });
+        const result = await response.json();
+        if (result) {
+          await loadPastReports();
+          await loadRecord(result.record_id);
+        } else {
+          alert(result.error);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function loadRecord(recordId) {
+      showLoading();
+      try {
+        if (!recordId) return;
+        const response = await fetch(`${API_URL}/signal_history/${recordId}`, {
+          method: "GET",
+          credentials: "include"
+        });
+        const record = await response.json();
+        if (record.error) {
+          alert(record.error);
+        } else {
+          plotDiagnosisReport(record);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function loadPastReports() {
+      document.querySelectorAll('.section').forEach(section => {
+          section.style.display = 'none'; 
+      });
+
+    document.getElementById("diagnosis_report_section").style.display = 'block'; 
+    showLoading();
+    try {
+        const response = await fetch(`${API_URL}/signal_history/metadata`, {
+            method: "GET",
+            credentials: "include"
+        });
+        const result = await response.json();
+        const selectEl = document.getElementById("past_reports");
+        selectEl.innerHTML = '<option value="">Select a past record</option>';
+        if (result.signal_history_metadata) {
+            result.signal_history_metadata.forEach(record => {
+                const option = document.createElement("option");
+                option.value = record.id;
+                option.textContent = record.timestamp;
+                selectEl.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error(error);
+    } finally {
+        hideLoading();
+    }
+}
+
+    async function selectPastReport() {
+      showLoading();
+      try {
+        const recordId = document.getElementById("past_reports").value;
+        if (recordId) {
+          await loadRecord(recordId);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function classifyRisk(probability) {
+      const percent = (probability * 100).toFixed(1);
+      if (probability < 0.4) {
+        return `Low Risk (${percent}%)`;
+      } else if (probability < 0.6) {
+        return `Moderate Risk (${percent}%)`;
+      } else {
+        return `High Risk (${percent}%)`;
+      }
+    }
+
+    function plotDiagnosisReport(record) {
+      document.getElementById("diagnosis_prediction").innerText = "";
+      document.getElementById("signal_plot").innerHTML = "";
+      document.getElementById("band_plot").innerHTML = "";
+      document.getElementById("alpha_plot").innerHTML = "";
+      document.getElementById("beta_plot").innerHTML = "";
+      document.getElementById("delta_plot").innerHTML = "";
+      document.getElementById("gamma_plot").innerHTML = "";
+      document.getElementById("theta_plot").innerHTML = "";
+      if (record.prediction) {
+        const pred = record.prediction;
+        const formattedPrediction = `
+      Prediction Results:
+      - Alzheimer Diseases: ${classifyRisk(pred.AD)}
+      - Anxiety Disorder: ${classifyRisk(pred.AXT)}
+      - Dementia (FTD): ${classifyRisk(pred.FTD)}
+      - Parkinson Diseases: ${classifyRisk(pred.PKS)}
+        `;
+        document.getElementById("diagnosis_prediction").innerText = formattedPrediction;
+      } else {
+        document.getElementById("diagnosis_prediction").innerText = "No prediction result available.";
+      }
+
+      const eegData = record.eeg_data;
+      const samplingRate = record.sampling_rate || 500;
+      let timestamps = [];
+      const channels = Object.keys(eegData.signals);
+      if (eegData.timestamps) {
+        timestamps = eegData.timestamps.map(t => t / samplingRate);
+      } else {
+        const nPoints = eegData.signals[channels[0]].length;
+        for (let i = 0; i < nPoints; i++) {
+          timestamps.push(i / samplingRate);
+        }
+      }
+
+      const nPoints = eegData.signals[channels[0]].length;
+      const avgSignal = [];
+      for (let i = 0; i < nPoints; i++) {
+        let sum = 0;
+        channels.forEach(ch => {
+          sum += eegData.signals[ch][i];
+        });
+        avgSignal.push(sum / channels.length);
+      }
+      const totalPoints = timestamps.length;
+      const pointsFor5Sec = Math.floor(samplingRate * 5);
+      const startTime = totalPoints > pointsFor5Sec ? timestamps[totalPoints - pointsFor5Sec] : timestamps[0];
+      const endTime = timestamps[totalPoints - 1];
+      const signalData = [{
+        x: timestamps,
+        y: avgSignal,
+        mode: "lines",
+        name: "Average EEG Signal"
+      }];
+
+      const signalLayout = {
+        title: "Average EEG Signal",
+        xaxis: {
+          title: "Time (s)",
+          range: [startTime, endTime],
+          rangeslider: { visible: true }
+        },
+        yaxis: { title: "EEG Amplitude" },
+        margin: { t: 50, b: 50, l: 80, r: 50 }
+      };
+
+      Plotly.newPlot("signal_plot", signalData, signalLayout);
+      const { timeStamps, bandTimeSeries } = computeBandPowerTimeSeries(avgSignal, samplingRate, 1.0);
+      const bandTraces = [];
+      for (const band in bandTimeSeries) {
+        bandTraces.push({
+          x: timeStamps,
+          y: bandTimeSeries[band],
+          mode: "lines",
+          name: band + " Power",
+          line: { color: bandColors[band] }
+        });
+      }
+      const bandLayout = {
+        title: "EEG Band Power",
+        xaxis: { title: "Time (s)" },
+        yaxis: { title: "Estimated Power" },
+        margin: { t: 50, b: 50, l: 80, r: 50 }
+      };
+      Plotly.newPlot("band_plot", bandTraces, bandLayout);
+
+      for (const band in bandTimeSeries) {
+        const layout = {
+          title: band + " Power",
+          xaxis: { title: "Time (s)" },
+          yaxis: { title: "Estimated Power" },
+          margin: { t: 50, b: 50, l: 80, r: 50 }
+        };
+
+        Plotly.newPlot(band.toLowerCase() + "_plot", [{
+          x: timeStamps,
+          y: bandTimeSeries[band],
+          mode: "lines",
+          name: band + " Power",
+          line: { color: bandColors[band] }
+        }], layout);
+      }
+    }
+
+
+    function computeBandPower(signal, f_low, f_high, sampleRate) {
+      const N = 101; 
+      const M = (N - 1) / 2;
+      const filter = [];
+      for (let n = 0; n < N; n++) {
+        let t = n - M;
+        let h;
+        if (t === 0) {
+          h = 2 * (f_high - f_low) / sampleRate;
+        } else {
+          h = (Math.sin(2 * Math.PI * f_high * t / sampleRate) - Math.sin(2 * Math.PI * f_low * t / sampleRate)) / (Math.PI * t);
+        }
+        const w = 0.54 - 0.46 * Math.cos(2 * Math.PI * n / (N - 1));
+        filter.push(h * w);
+      }
+      const filtered = [];
+      for (let i = 0; i < signal.length; i++) {
+        let sum = 0;
+        for (let j = 0; j < N; j++) {
+          const k = i - M + j;
+          if (k >= 0 && k < signal.length) {
+            sum += signal[k] * filter[j];
+          }
+        }
+        filtered.push(sum);
+      }
+      const power = filtered.reduce((acc, val) => acc + val * val, 0) / filtered.length;
+      return power;
+    }
+
+    function computeBandPowerTimeSeries(avgSignal, sampleRate, windowDuration) {
+      const windowSize = Math.floor(sampleRate * windowDuration);
+      const nWindows = Math.floor(avgSignal.length / windowSize);
+      const bands = {
+        Alpha: [8, 13],
+        Beta: [13, 30],
+        Delta: [0.5, 4],
+        Gamma: [30, 45],
+        Theta: [4, 8]
+      };
+      const bandTimeSeries = {};
+      for (const band in bands) {
+        bandTimeSeries[band] = [];
+      }
+      const timeStamps = [];
+      for (let i = 0; i < nWindows; i++) {
+        const segment = avgSignal.slice(i * windowSize, (i + 1) * windowSize);
+        const t = (i + 0.5) * windowDuration;
+        timeStamps.push(t);
+        for (const band in bands) {
+          const [f_low, f_high] = bands[band];
+          const power = computeBandPower(segment, f_low, f_high, sampleRate);
+          bandTimeSeries[band].push(power);
+        }
+      }
+      return { timeStamps, bandTimeSeries };
+    }
+
+    async function loadSummary() {
+
+    document.querySelectorAll('.section').forEach(section => {
+        section.style.display = 'none';
+    });
+
+    document.getElementById("summary_report_section").style.display = 'block'; 
+
+    showLoading();
+    try {
+        const response = await fetch(`${API_URL}/signal_history/summary`, {
+            method: "GET",
+            credentials: "include"
+        });
+        const result = await response.json();
+        if (result.error) {
+            alert(result.error);
+        } else {
+            plotSummary(result);
+        }
+    } catch (error) {
+        console.error(error);
+    } finally {
+        hideLoading();
+    }
+}
+
+    function plotSummary(summaryData) {
+      const signalTrace = {
+        x: summaryData.summary_signal.normalized_time,
+        y: summaryData.summary_signal.average_signal,
+        mode: 'lines',
+        name: 'Average EEG Signal'
+      };
+      const signalLayout = {
+        title: "Aggregated Average EEG Signal (Normalized Time)",
+        xaxis: { title: "Normalized Time (0-1)" },
+        yaxis: { title: "EEG Amplitude" },
+        margin: { t: 50, b: 50, l: 80, r: 50 }
+      };
+      Plotly.newPlot("summary_signal_plot", [signalTrace], signalLayout);
+      const bandTraces = [];
+      for (const band in summaryData.summary_band.bands) {
+        bandTraces.push({
+          x: summaryData.summary_band.normalized_time,
+          y: summaryData.summary_band.bands[band],
+          mode: 'lines',
+          name: band + " Power",
+          line: { color: bandColors[band] }
+        });
+      }
+      const bandLayout = {
+        title: "Aggregated Average EEG Band Power (Normalized Time)",
+        xaxis: { title: "Normalized Time (0-1)" },
+        yaxis: { title: "Average Power" },
+        margin: { t: 50, b: 50, l: 80, r: 50 }
+      };
+      Plotly.newPlot("summary_band_plot", bandTraces, bandLayout);
+
+      for (const band in summaryData.summary_band.bands) {
+        const layout = {
+          title: "Aggregated Average " + band + " Power (Normalized Time)",
+          xaxis: { title: "Normalized Time (0-1)" },
+          yaxis: { title: "Average " + band + " Power" },
+          margin: { t: 50, b: 50, l: 80, r: 50 }
+        };
+        const trace = {
+          x: summaryData.summary_band.normalized_time,
+          y: summaryData.summary_band.bands[band],
+          mode: 'lines',
+          name: band + " Power",
+          line: { color: bandColors[band] }
+        };
+       
+        Plotly.newPlot("summary_" + band.toLowerCase() + "_plot", [trace], layout);
+      }
+    }
+
+
+    function updateUserProfileSection(user) {
+      if (!user) return;
+      document.getElementById("user_profile_section").style.display = "block";
+      document.getElementById("profile_email").innerText = user.email;
+      document.getElementById("profile_name").value = user.name || "";
+      document.getElementById("profile_age").value = user.age || "";
+      document.getElementById("profile_icon").src = `${API_URL}/user_icon/${user.id}?t=` + new Date().getTime();
+    }
+
+    async function updateProfileIcon() {
+      showLoading();
+      try {
+        const fileInput = document.getElementById("profile_icon_upload");
+        if (fileInput.files.length === 0) {
+          alert("Please select an icon file.");
+          return;
+        }
+        const file = fileInput.files[0];
+        const validFileTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!validFileTypes.includes(file.type)) {
+          alert("Please select a valid image file (JPEG, PNG, GIF).");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById("profile_icon").src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await fetch(`${API_URL}/change_icon`, {
+          method: "POST",
+          body: formData,
+          credentials: "include"
+        });
+        const result = await response.json();
+        document.getElementById("profile_icon_result").innerText = JSON.stringify(result, null, 2);
+        document.getElementById("profile_icon").src =
+          `${API_URL}/user_icon/${currentUserId}?t=` + new Date().getTime();
+      } catch (error) {
+        console.error(error);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function updateProfileName() {
+    showLoading();
+    try {
+        const newName = document.getElementById("profile_name_input").value.trim();
+        if (!newName) {
+            alert("Please enter a new name.");
+            return;
+        }
+        const response = await fetch(`${API_URL}/update_name`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ name: newName })
+        });
+        const result = await response.json();
+        document.getElementById("current_profile_name").innerText = newName;
+        document.getElementById("profile_name_input").value = "";
+        document.getElementById("profile_name_result").innerText = "Name updated successfully!";
+    } catch (error) {
+        console.error(error);
+    } finally {
+        hideLoading();
+    }
+}
+
+    async function updateProfileAge() {
+    showLoading();
+    try {
+        const ageInput = document.getElementById("profile_age_input");
+        const newAge = ageInput.value.trim(); 
+        if (newAge === "" || isNaN(newAge) || newAge < 0) {
+            alert("Please enter a valid age.");
+            return;
+        }
+
+        const ageNumber = parseInt(newAge, 10); 
+        const response = await fetch(`${API_URL}/update_age`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ age: ageNumber })
+        });
+        const result = await response.json();
+        document.getElementById("current_profile_age").innerText = newAge;
+        document.getElementById("profile_age_input").value = "";
+        document.getElementById("profile_age_result").innerText = "Age updated successfully!";
+    } catch (error) {
+        console.error(error);
+    } finally {
+        hideLoading();
+    }
+}
+
+
+    async function changePassword() {
+      showLoading();
+      try {
+          const oldPassword = document.getElementById("old_password").value.trim();
+          const newPassword = document.getElementById("new_password").value.trim();
+          const confirmPassword = document.getElementById("confirm_new_password").value.trim();
+          if (!oldPassword || !newPassword || !confirmPassword) {
+              alert("Please fill in all password fields.");
+              return;
+          }
+          if (newPassword !== confirmPassword) {
+              alert("New password and confirmation do not match.");
+              return;
+          }
+          const response = await fetch(`${API_URL}/change_password`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
+          });
+          const result = await response.json();
+          if (result.error) {
+              if (result.error.toLowerCase().includes("old password")) {
+                  alert("Non-valid old password");
+              } else {
+                  alert(result.error);
+              }
+              return;
+          }
+          document.getElementById("old_password").value = "";
+          document.getElementById("new_password").value = "";  
+          document.getElementById("confirm_new_password").value = "";
+          document.getElementById("profile_password_result").innerText = "Password updated successfully!";
+      } catch (error) {
+          console.error(error);
+          document.getElementById("profile_password_result").innerText = "Non-valid Input";
+      } finally {
+          hideLoading();
+      }
+    }
+
+    function loadUploadSection() {
+    document.querySelectorAll('.section').forEach(section => {
+        section.style.display = 'none'; 
+    });
+
+    document.getElementById("user_upload").style.display = 'block';
+    }
+
+    async function loadUserProfile() {
+    document.querySelectorAll('.section').forEach(section => {
+        section.style.display = 'none'; 
+    });
+
+    const userProfileSection = document.getElementById("user_profile_section");
+    if (userProfileSection) {
+        userProfileSection.style.display = 'block'; 
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/user_profile`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        const user = await response.json();
+        updateUserProfileSection(user); 
+    } catch (error) {
+        console.error("Error loading user profile:", error);
+    }
+}
+
+    
+async function updateUserProfile() {
+  showLoading();
+  try {
+    let responses = [];
+    const fileInput = document.getElementById("profile_icon_upload");
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      const validFileTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      if (!validFileTypes.includes(file.type)) {
+        alert("Please select a valid image file (JPEG, PNG, GIF).");
+        hideLoading();
+        return;
+      }
+      const formData = new FormData();
+      formData.append("file", file);
+      const iconResponse = await fetch(`${API_URL}/change_icon`, {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
+      const iconResult = await iconResponse.json();
+      responses.push(iconResult);
+      document.getElementById("profile_icon").src = `${API_URL}/user_icon/${currentUserId}?t=` + new Date().getTime();
+    }
+
+    const newName = document.getElementById("profile_name_input").value.trim();
+    if (newName) {
+      const nameResponse = await fetch(`${API_URL}/update_name`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name: newName })
+      });
+      const nameResult = await nameResponse.json();
+      responses.push(nameResult);
+      document.getElementById("current_profile_name").innerText = newName;
+    }
+
+    const ageValue = document.getElementById("profile_age_input").value.trim();
+    if (ageValue !== "" && !isNaN(ageValue) && ageValue >= 0) {
+      const ageNumber = parseInt(ageValue, 10);
+      const ageResponse = await fetch(`${API_URL}/update_age`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ age: ageNumber })
+      });
+      const ageResult = await ageResponse.json();
+      responses.push(ageResult);
+      document.getElementById("current_profile_age").innerText = ageValue;
+    }
+
+    document.getElementById("profile_update_result").innerText = "Profile updated successfully!";
+  } catch (error) {
+    console.error(error);
+    document.getElementById("profile_update_result").innerText = "Error updating profile.";
+  } finally {
+    hideLoading();
+  }
+}
+async function loadPastRecordsForSummary() {
+      try {
+          const response = await fetch(`${API_URL}/signal_history/metadata`, {
+              method: "GET",
+              credentials: "include"
+          });
+          const result = await response.json();
+          const selectEl = document.getElementById("selected_records");
+          selectEl.innerHTML = "";
+          if (result.signal_history_metadata) {
+              result.signal_history_metadata.forEach(record => {
+                  const option = document.createElement("option");
+                  option.value = record.id;
+                  option.textContent = record.timestamp;
+                  selectEl.appendChild(option);
+              });
+          }
+      } catch (error) {
+          console.error(error);
+      }
+  }
+  function displaySummaryText(summaryText) {
+      const formattedText = markdownToHtml(summaryText);
+      const container = document.getElementById("summary_container");
+      container.innerHTML = formattedText;
+      container.style.display = formattedText.trim() ? 'block' : 'none';
+  }
+
+  async function generateLatestSummary() {
+    showLoading();
+    try {
+        // Call the endpoint to generate summary using latest records
+        const response = await fetch(`${API_URL}/generate_summary`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({})
+        });
+        const result = await response.json();
+        if (result.summary) {
+            displaySummaryText(result.summary);
+            loadPastSummaries(); // Reload past summaries list
+            toggleConsultButton(result.summary.trim()); // Ensure this is called correctly
+        } else {
+            alert(result.error || "Error generating summary.");
+            toggleConsultButton(''); // Hide button if there's no summary
+        }
+    } catch (error) {
+        console.error(error);
+        toggleConsultButton(''); // Hide button on error
+    } finally {
+        hideLoading();
+    }
+}
+
+  async function loadPastSummaries() {
+      showLoading();
+      try {
+          const response = await fetch(`${API_URL}/past_summaries`, {
+              method: "GET",
+              credentials: "include"
+          });
+          const result = await response.json();
+          const selectEl = document.getElementById("past_summaries");
+          selectEl.innerHTML = '<option value="">Select a past summary</option>';
+          if(result.past_summaries){
+              result.past_summaries.forEach(summary => {
+                  const option = document.createElement("option");
+                  option.value = summary.id;
+                  option.textContent = new Date(summary.timestamp).toLocaleString();
+                  selectEl.appendChild(option);
+              });
+          }
+      } catch (error) {
+          console.error(error);
+      } finally {
+          hideLoading();
+      }
+  }
+
+  async function displayPastSummary() {
+      const summaryId = document.getElementById("past_summaries").value;
+      if(!summaryId) {
+          document.getElementById("summary_container").style.display = 'none';
+          return;
+      }
+      showLoading();
+      try {
+          const response = await fetch(`${API_URL}/past_summaries/${summaryId}`, {
+              method: "GET",
+              credentials: "include"
+          });
+          const result = await response.json();
+          if(result.summary){
+              displaySummaryText(result.summary);
+              toggleConsultButton(result.summary.trim());
+          } else {
+              document.getElementById("summary_container").style.display = 'none';
+          }
+      } catch (error) {
+          console.error(error);
+          toggleConsultButton('');
+      } finally {
+          hideLoading();
+      }
+  }
+
+window.onload = function() {
+  loadDashboard();
+  loadPastSummaries();
+};
+
+function loadDashboard() {
+    document.querySelectorAll('.section').forEach(section => {
+        section.style.display = 'none'; 
+    });
+    const welcomeSection = document.createElement('div');
+    welcomeSection.className = 'section'; 
+    welcomeSection.innerHTML = `<h1 style="font-size: 2.5rem; color: #6F42C1; margin-bottom: 20px; text-align: center;">
+        Welcome to Mindwave, {{ user_name }} !
+    </h1>
+    <h3 style="font-size: 1.8rem; color: #34495e; margin-bottom: 15px; text-align: center;">
+        Explore the following features to manage your account and data:
+    </h3>
+    <h4 style="font-size: 1.5rem; color: #2980b9; margin: 15px 0 5px;">
+        User Profile:
+    </h4>
+    <p style="line-height: 1.6; margin-bottom: 15px; background: #ffffff; border-radius: 5px; padding: 15px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+        Easily view or modify your personal information to keep your account up to date.
+    </p>
+    <h4 style="font-size: 1.5rem; color: #2980b9; margin: 15px 0 5px;">
+        Upload EEG:
+    </h4>
+    <p style="line-height: 1.6; margin-bottom: 15px; background: #ffffff; border-radius: 5px; padding: 15px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+        Upload your EEG data, including .set and .fdt files (if available), for analysis.
+    </p>
+    <h4 style="font-size: 1.5rem; color: #2980b9; margin: 15px 0 5px;">
+        Diagnosis Report:
+    </h4>
+    <p style="line-height: 1.6; margin-bottom: 15px; background: #ffffff; border-radius: 5px; padding: 15px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+        Review past analyses with detailed reports, including data visualizations and charts.
+    </p>
+    <h4 style="font-size: 1.5rem; color: #2980b9; margin: 15px 0 5px;">
+        Summary:
+    </h4>
+    <p style="line-height: 1.6; margin-bottom: 15px; background: #ffffff; border-radius: 5px; padding: 15px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+        Receive AI-generated summaries and personalized recommendations based on your EEG data.
+    </p>`;
+    document.querySelector('.main-content').appendChild(welcomeSection);
+}
+
+function loadDiagnosisReportSection() {
+    document.querySelectorAll('.section').forEach(section => {
+        section.style.display = 'none'; 
+    });
+
+    document.getElementById("diagnosis_report_section").style.display = 'block'; 
+}
+  </script>
+</head>
+<body>
+  <div class="container">
+    <aside class="sidebar">
+
+        <ul>
+          <h2 class="sidebar-logo" >MindWave</h2>
+            <li style="font-size:155%;;"><a href="#" onclick="loadUserProfile()"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T560-640q0-33-23.5-56.5T480-720q-33 0-56.5 23.5T400-640q0 33 23.5 56.5T480-560Zm0-80Zm0 400Z"/></svg><b> User Profile</b></a></li>
+            <li style="font-size:155%;"><a href="#" onclick="loadUploadSection()"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M440-320v-326L336-542l-56-58 200-200 200 200-56 58-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg><b> Upload EEG</b></a></li>
+            <li style="font-size:155%;"><a href="#" onclick="loadPastReports()"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M320-200h320v-80H320v80Zm0-120h320v-80H320v80Zm160-148q66-60 113-106.5t47-97.5q0-36-26-62t-62-26q-21 0-40.5 8.5T480-728q-12-15-31.5-23.5T408-760q-36 0-62 26t-26 62q0 51 45.5 96T480-468ZM720-80H240q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h480q33 0 56.5 23.5T800-800v640q0 33-23.5 56.5T720-80Zm-480-80h480v-640H240v640Zm0 0v-640 640Z"/></svg><b> Diagnose Report</b></a></li>
+            <li style="font-size:155%;"><a href="#" onclick="loadSummary()"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M320-600q17 0 28.5-11.5T360-640q0-17-11.5-28.5T320-680q-17 0-28.5 11.5T280-640q0 17 11.5 28.5T320-600Zm0 160q17 0 28.5-11.5T360-480q0-17-11.5-28.5T320-520q-17 0-28.5 11.5T280-480q0 17 11.5 28.5T320-440Zm0 160q17 0 28.5-11.5T360-320q0-17-11.5-28.5T320-360q-17 0-28.5 11.5T280-320q0 17 11.5 28.5T320-280ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h440l200 200v440q0 33-23.5 56.5T760-120H200Zm0-80h560v-400H600v-160H200v560Zm0-560v160-160 560-560Z"/></svg><b> Summary</b></a></li>
+            <li style="font-size:155%;"><a href="#" onclick="logout()"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h280v80H200Zm440-160-55-58 102-102H360v-80h327L585-622l55-58 200 200-200 200Z"/></svg> Logout</a></li>
+          </ul>
+    </aside>
+
+    <main class="main-content">
+        <div id="loading-overlay">
+            <div class="loader"></div>
+        </div>
+
+
+  <div class="section" id="user_profile_section">
+    <h3>User Profile</h3>
+  <div class="user-profile-container">
+    <div class="profile-picture">
+      <img id="profile_icon" src="{{ url_for('get_user_icon', user_id=current_user.id) }}" alt="User Icon"  style="max-width: 200px; max-height: 300px;"/>
+      <label for="profile_icon_upload">Change Icon:</label>
+      <input type="file" id="profile_icon_upload" accept="image/*" />
+    </div>
+
+    <div class="profile-details">
+      <div class="user-email-section">
+        <label>Email:</label>
+        <span id="profile_email">{{ user_email }}</span>
+      </div>
+
+      <div class="profile-name">
+        <label for="profile_name_input">Name:
+          <span id="current_profile_name">{{ user_name }}</span>
+      </label>
+        <input type="text" id="profile_name_input" placeholder="Enter name"  required />
+      </div>
+
+      <div class="profile-age">
+        <label for="profile_age">Age:
+          <span id="current_profile_age">{{ user_age }}</span>
+          </label>
+        <input type="number" id="profile_age_input" placeholder="Enter age" min="0"  required />
+      </div>
+
+      <button onclick="updateUserProfile()"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M480-120q-75 0-140.5-28.5t-114-77q-48.5-48.5-77-114T120-480q0-75 28.5-140.5t77-114q48.5-48.5 114-77T480-840q82 0 155.5 35T760-706v-94h80v240H600v-80h110q-41-56-101-88t-129-32q-117 0-198.5 81.5T200-480q0 117 81.5 198.5T480-200q105 0 183.5-68T756-440h82q-15 137-117.5 228.5T480-120Zm112-192L440-464v-216h80v184l128 128-56 56Z"/></svg> Update Profile</button>
+      <pre id="profile_update_result"></pre>
+    </div>
+  </div>
+
+      <div class="change-password-section">
+        <h4>Change Password</h4>
+        <label for="old_password">Old Password:</label>
+        <input type="password" id="old_password" placeholder="Enter old password" required/><br>
+        
+        <label for="new_password">New Password:</label>
+        <input type="password" id="new_password" placeholder="Enter new password" required/><br>
+        
+        <label for="confirm_new_password">Confirm New Password:</label>
+        <input type="password" id="confirm_new_password" placeholder="Confirm new password" required/><br>
+        
+        <button onclick="changePassword()"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480h80q0 66 25 124.5t68.5 102q43.5 43.5 102 69T480-159q134 0 227-93t93-227q0-134-93-227t-227-93q-89 0-161.5 43.5T204-640h116v80H80v-240h80v80q55-73 138-116.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm-80-240q-17 0-28.5-11.5T360-360v-120q0-17 11.5-28.5T400-520v-40q0-33 23.5-56.5T480-640q33 0 56.5 23.5T560-560v40q17 0 28.5 11.5T600-480v120q0 17-11.5 28.5T560-320H400Zm40-200h80v-40q0-17-11.5-28.5T480-600q-17 0-28.5 11.5T440-560v40Z"/></svg> Change Password</button>
+        <pre id="profile_password_result"></pre>
+    </div>
+
+  </div>
+
+  <div class="section" id="user_upload">
+    <h3>Upload EEG File</h3>
+    <p>Select .set file:</p>
+    <input type="file" id="file_upload" /><br>
+    <p>Select .fdt file (if exists):</p>
+    <input type="file" id="fdt_upload" /><br>
+    <button onclick="uploadFile()"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M440-200h80v-167l64 64 56-57-160-160-160 160 57 56 63-63v167ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-520v-200H240v640h480v-440H520ZM240-800v200-200 640-640Z"/></svg> Upload and Diagnose</button>
+  </div>
+
+  <div class="section" id="diagnosis_report_section">
+    <h3>Diagnosis Report</h3>
+    <div class="past-reports">
+        <label for="past_reports">Past Records:</label>
+        <select id="past_reports" onchange="selectPastReport()">
+            <option value="">Select a past record</option>
+        </select>
+    </div>
+    <p id="diagnosis_prediction"></p>
+    <br></br>
+    <div id="signal_plot" class="plot-container"></div>
+    <div id="band_plot" class="plot-container"></div>
+    <div id="alpha_plot" class="plot-container"></div>
+    <div id="beta_plot" class="plot-container"></div>
+    <div id="delta_plot" class="plot-container"></div>
+    <div id="gamma_plot" class="plot-container"></div>
+    <div id="theta_plot" class="plot-container"></div>
+  
+</div>
+
+<div class="section" id="summary_report_section">
+  <h3>Summary</h3>
+  <div>
+    <button onclick="generateLatestSummary()"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M680-320q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35Zm0-80q17 0 28.5-11.5T720-440q0-17-11.5-28.5T680-480q-17 0-28.5 11.5T640-440q0 17 11.5 28.5T680-400ZM440-40v-116q0-21 10-39.5t28-29.5q32-19 67.5-31.5T618-275l62 75 62-75q37 6 72 18.5t67 31.5q18 11 28.5 29.5T920-156v116H440Zm79-80h123l-54-66q-18 5-35 13t-34 17v36Zm199 0h122v-36q-16-10-33-17.5T772-186l-54 66Zm-76 0Zm76 0Zm-518 0q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v200q-16-20-35-38t-45-24v-138H200v560h166q-3 11-4.5 22t-1.5 22v36H200Zm80-480h280q26-20 57-30t63-10v-40H280v80Zm0 160h200q0-21 4.5-41t12.5-39H280v80Zm0 160h138q11-9 23.5-16t25.5-13v-51H280v80Zm-80 80v-560 137-17 440Zm480-240Z"/></svg> Get your Summary</button>
+  </div>
+  <div style="margin-top: 20px;">
+    <label for="past_summaries">View a Past Summary:</label>
+    <select id="past_summaries" onchange="displayPastSummary()" style="width: 100%;">
+      <option value="">Select a past summary</option>
+    </select>
+  </div>
+  <div id="summary_container" style="display: none; margin-top: 20px; border: 1px solid #ccc; padding: 10px;"></div>
+  <br>
+  <button id="consult-ai-button" onclick="consultWithAi()" style="display: none;">Consult with AI Doctor</button>
+</div>
+
+</main>
+</div>
+  <div id="messageModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <p id="modalMessage"></p>
+      </div>
+  </div>
+
+  <div id="chat-icon">🤖</div>
+
+  <div id="chat-container" style="display: none;">
+      <h2>Consult with AI Doctor</h2>
+      <div id="messages"></div>
+      <input type="text" id="user-input" placeholder="Type your message here..." />
+      <button id="send-button">Send</button>
+  </div>
+
+
+
+<script>
+    const chatContainer = document.getElementById('chat-container');
+    const sendButton = document.getElementById('send-button');
+    const userInput = document.getElementById('user-input');
+    const messages = document.getElementById('messages');
+    const chatIcon = document.getElementById('chat-icon');
+
+    // Function to display messages in the chat
+    function displayMessage(sender, text, className) {
+        messages.innerHTML += `<div class="${className}"><strong>${sender}:</strong> ${markdownToHtml(text)}</div>`;
+        messages.scrollTop = messages.scrollHeight; 
+    }
+
+    async function loadChatHistory() {
+        const response = await fetch('/api/chat/history');
+        const data = await response.json();
+        
+        // Clear current messages
+        messages.innerHTML = '';
+        
+        if (data.history.length > 1) {
+            let skipNext = false;
+
+            data.history.slice(1).forEach(msg => {
+                if (msg.content.includes('<!!HIDE>')) {
+                    skipNext = true;
+                    return;
+                }
+
+                if (skipNext) {
+                    skipNext = false;
+                    return;
+                }
+
+                if (msg.content.includes('<!!FIRST>')) {
+                    return;
+                }
+
+                const className = msg.role === 'user' ? 'user-message' : 'ai-message';
+                const formattedMessage = markdownToHtml(msg.content);
+                messages.innerHTML += `<div class="${className}"><strong>${msg.role === 'user' ? 'You' : 'AI Doctor'}:</strong> ${formattedMessage}</div>`;
+            });
+        } else if (data.history.length === 1) {
+            console.log("Only one message in history, skipping display.");
+        }
+
+        // Scroll to the bottom of the messages container
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    chatIcon.addEventListener('click', () => {
+        chatContainer.style.display = chatContainer.style.display === 'block' ? 'none' : 'block';
+        loadChatHistory(); // Load chat history when icon is clicked
+    });
+
+    async function sendMessage() {
+        const userMessage = userInput.value.trim();
+        if (!userMessage) return;
+
+        displayMessage('You', userMessage, 'user-message');
+        userInput.value = '';
+
+        // Display "Please wait..." message
+        displayMessage('AI Doctor', 'Please wait...', 'ai-message');
+        
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: userMessage }),
+            });
+
+            const data = await response.json();
+
+            // Clear the "Please wait..." message
+            if (messages.lastChild) {
+                messages.lastChild.remove(); // Safely remove the last message
+            }
+
+            if (data.reply) {
+                displayMessage('AI Doctor', data.reply, 'ai-message');
+            } else {
+                displayMessage('AI Doctor', 'No response from AI.', 'ai-message');
+            }
+
+            if (data.suggested_questions) {
+                displaySuggestedQuestions(data.suggested_questions);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            displayMessage('Error', 'An error occurred while sending your message.', 'ai-message');
+        }
+    }
+
+    function displaySuggestedQuestions(suggestedQuestions) {
+    const suggestionsContainer = document.createElement('div');
+    suggestionsContainer.className = 'suggestions-container';
+
+    suggestedQuestions.forEach(question => {
+        // Check if the question is not empty, does not contain brackets, does not contain "certainly", and is not just whitespace
+        if (question.trim() && 
+            !question.includes('[') && 
+            !question.includes(']') && 
+            !question.toLowerCase().includes('certainly')) {
+            
+            const cleanQuestion = question.replace(/['"]/g, ''); // Remove quote marks
+            const finalQuestion = cleanQuestion.replace(/\*/g, ''); // Remove asterisks
+
+            const button = document.createElement('button');
+            button.textContent = finalQuestion.replace(/^\d+\.\s*/, ''); // Remove numbering if present
+            button.className = 'suggestion-button';
+            button.onclick = () => {
+                userInput.value = button.textContent; // Set the input to the question
+                sendMessage(); // Send the question to AI
+            };
+
+            // Style the button to fill the width
+            button.style.width = '100%'; // Set button width to fill container
+            button.style.margin = '5px 0'; // Set vertical margin for spacing
+            button.style.padding = '10px'; // Add padding for better appearance
+            button.style.boxSizing = 'border-box'; // Include padding in width calculation
+            suggestionsContainer.appendChild(button);
+        }
+    });
+
+
+    // Clear previous suggestions and add new ones
+    const existingSuggestions = document.querySelector('.suggestions-container');
+    if (existingSuggestions) {
+        existingSuggestions.remove();
+    }
+    messages.appendChild(suggestionsContainer);
+}
+
+sendButton.addEventListener('click', sendMessage);
+    
+    userInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    });
+</script>
+</body>
+</html>

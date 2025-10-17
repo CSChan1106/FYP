@@ -32,7 +32,6 @@ Then, install the required libraries in your activated environment.
 ## Step 3:
 
     Change your database URI in your application:
-    python
 ```bash
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://[username]:[password]@localhost/eeg_db'
 ```
